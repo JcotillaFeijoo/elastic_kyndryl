@@ -1,0 +1,362 @@
+
+Comandos útiles para trabajar con índices en Elasticsearch desde curl. Los he agrupado por tareas comunes para que los tengas a mano. Todos los ejemplos usan tu nodo 10.10.1.4:9200.
+	
+⚠️ Nota: Cambia los nombres de índice/alias según tu entorno. En producción, cuidado con operaciones que bloquean (p. ej., delete, close, forcemerge).
+
+
+🧪 Integridad y salud
+
+	** Salud del clúster:
+		curl -s 'http://10.10.1.4:9200/_cluster/health?pretty'
+		
+	** Estado del índice (routing, recovery):
+		curl -s 'http://10.10.1.4:9200/logstash-ha-2025.12.10/_stats/store,docs,segments?pretty'
+		
+	** Comprobar asignación de shards:
+		curl -s 'http://10.10.1.4:9200/_cat/allocation?v'
+	
+	** Estado detallado de los nodos del clúster
+		curl -s 'http://10.10.1.4:9200/_cat/nodes?v'
+	
+	** Roles del clúster (ver roles por nodo)**
+		curl -s 'http://10.10.1.4:9200/_cat/nodes?h=name,ip,node.role,master'
+	
+	** Información completa de nodos (JSON detallado)**
+		curl -s 'http://10.10.1.4:9200/_nodes?pretty'
+
+
+
+📋 Listado y exploración
+
+	** Listar todos los índices (tabla):
+		curl -s 'http://10.10.1.4:9200/_cat/indices?v'
+		
+	** Solo nombres de índice:
+		curl -s 'http://10.10.1.4:9200/_cat/indices?h=index'
+		
+	** Ordenados por tamaño:
+		curl -s 'http://10.10.1.4:9200/_cat/indices?v&s=store.size:desc'
+		
+	** Filtrar por patrón (solo índices de usuario, sin punto inicial):
+		curl -s 'http://10.10.1.4:9200/_cat/indices?h=index' | grep -vE '^.'
+		
+	** Detalles de shards por índice:
+		curl -s 'http://10.10.1.4:9200/_cat/shards/logstash-ha-2025.12.10?v'
+		
+	** Ver segmentos (útil para diagnosticar rendimiento):
+		curl -s 'http://10.10.1.4:9200/_cat/segments/logstash-ha-2025.12.10?v'
+		
+	** Estadísticas del índice (docs, store, query cache, etc.):
+		curl -s 'http://10.10.1.4:9200/logstash-ha-2025.12.10/_stats?pretty'
+
+
+
+🔎 Búsqueda y recuperación de documentos
+
+	** Buscar texto (full-text):
+		curl -s 'http://10.10.1.4:9200/logstash-ha-2025.12.10/_search?q=ERROR&size=10&pretty'
+		
+	** Buscar por campo exacto (message):
+		curl -s 'http://10.10.1.4:9200/logstash-ha-2025.12.10/_search?q=message:"ERROR probando logstash"&size=1&pretty'
+		
+	** Último documento por @timestamp:
+		curl -s 'http://10.10.1.4:9200/logstash-ha-2025.12.10/_search?sort=@timestamp:desc&size=1&pretty'
+		
+	** Obtener por _id:
+		curl -s 'http://10.10.1.4:9200/logstash-ha-2025.12.10/_doc/<ID>?pretty'
+
+
+
+🔍 Búsquedas avanzadas en Elasticsearch
+Estas consultas permiten realizar búsquedas más potentes y flexibles en tus índices.
+
+### ✅ **1. Fuzzy Search (búsqueda difusa)**
+
+	** Busca términos similares tolerando errores tipográficos.
+
+		curl -s -H 'Content-Type: application/json' -X POST "http://10.10.1.4:9200/logstash-ha-2025.12.10/_search" -d '{
+		  "query": {
+		    "fuzzy": {
+		      "message": {
+		        "value": "errror",
+		        "fuzziness": 1,
+		        "prefix_length": 1,
+		        "max_expansions": 50
+		      }
+		    }
+		  }
+		}'
+
+
+### ✅ **2. Match con fuzziness automática**
+
+	** Permite errores tipográficos con ajuste dinámico.
+
+		curl -s -H 'Content-Type: application/json' -X POST "http://10.10.1.4:9200/logstash-ha-2025.12.10/_search" -d '{
+		  "query": {
+		    "match": {
+		      "message": {
+		        "query": "Herrror",
+		        "fuzziness": "AUTO"
+		      }
+		    }
+		  }
+		}'
+
+
+*   `"AUTO"` ajusta la tolerancia según la longitud del término.
+*   **`fuzziness`**: número máximo de ediciones permitidas (0, 1, 2).
+*   **`prefix_length`**: caracteres iniciales que deben coincidir.
+*   **`max_expansions`**: variaciones generadas.
+
+
+
+### ✅ **3. Wildcard Query**
+
+	** Busca patrones con comodines (`*` para varios caracteres, `?` para uno).
+
+		curl -s -H 'Content-Type: application/json' -X POST "http://10.10.1.4:9200/logstash-ha-2025.12.10/_search" -d '{
+		  "query": {
+		    "wildcard": {
+		      "message": {
+		        "value": "err*"
+		      }
+		    }
+		  }
+		}'
+
+
+Ejemplo: `err*` coincide con `error`, `erroneo`, etc.
+
+
+
+### ✅ **4. Regexp Query**
+
+	** Busca usando expresiones regulares.
+
+	curl -s -H 'Content-Type: application/json' -X POST "http://10.10.1.4:9200/logstash-ha-2025.12.10/_search" -d '{
+	  "query": {
+	    "regexp": {
+	      "message": "err.*"
+	    }
+	  }
+	}'
+
+Ejemplo: `err.*` coincide con cualquier palabra que empiece por `err`.
+
+
+### ✅ **5. Phrase Query (frase exacta)**
+
+	** Busca documentos que contengan la frase exacta `"error crítico"`.
+
+		curl -s -H 'Content-Type: application/json' -X POST "http://10.10.1.4:9200/logstash-ha-2025.12.10/_search" -d '{
+		  "query": {
+		    "match_phrase": {
+		      "message": "error critico"
+		    }
+		  }
+		}'
+
+
+### ✅ **6. Slop Query (frase flexible)**
+
+	** Permite palabras intermedias entre los términos de la frase.
+
+		curl -s -H 'Content-Type: application/json' -X POST "http://10.10.1.4:9200/logstash-ha-2025.12.10/_search" -d '{
+		  "query": {
+		    "match_phrase": {
+		      "message": {
+		        "query": "error crítico",
+		        "slop": 3
+		      }
+		    }
+		  }
+		}'
+
+*   `slop: 3` → permite hasta 3 palabras entre `error` y `crítico`.
+
+
+
+🏗️ Creación, borrado, apertura/cierre
+
+	** Crear un índice (con settings básicos):
+		curl -s -X PUT 'http://10.10.1.4:9200/demo-index' -H 'Content-Type: application/json' -d '{
+		  "settings": {
+		    "numberofshards": 1,
+		    "numberofreplicas": 1
+		  }
+		}'
+	
+	** Borrar un índice (⚠️ irreversible):
+		curl -s -X DELETE 'http://10.10.1.4:9200/demo-index'
+	
+	
+	** Cerrar / abrir (libera recursos sin borrar datos):
+		curl -s -X POST 'http://10.10.1.4:9200/demo-index/close'
+		curl -s -X POST 'http://10.10.1.4:9200/demo-index/open'
+
+
+
+🧱 Mappings (esquema) y settings
+
+	** Ver mapping:
+		curl -s 'http://10.10.1.4:9200/logstash-ha-2025.12.10/_mapping?pretty'
+	
+	** Actualizar mapping (añadir campo con tipo):
+		curl -s -X PUT 'http://10.10.1.4:9200/demo-index/mapping' -H 'Content-Type: application/json' -d '{
+		  "properties": {
+		    "loglevel": { "type": "keyword" },
+		    "message":   { "type": "text" }
+		  }
+		}'
+		
+	** Ver settings:
+		curl -s 'http://10.10.1.4:9200/demo-index/_settings?pretty'
+	
+	** Cambiar número de réplicas (online):
+		curl -s -X PUT 'http://10.10.1.4:9200/demo-index/settings' -H 'Content-Type: application/json' -d '{
+		  "index": { "numberof_replicas": 1 }
+		}'
+
+
+
+🪪 Aliases y reindex
+
+	** Crear alias:
+		curl -s -X POST 'http://10.10.1.4:9200/_aliases' -H 'Content-Type: application/json' -d '{
+		  "actions": [
+		    { "add": { "index": "logstash-ha-2025.12.10", "alias": "logs-ha" } }
+		  ]
+		}'
+		
+	** Ver aliases:
+		Reindex (copiar datos de A → B, opcionalmente con transformaciones):
+		curl -s -X POST 'http://10.10.1.4:9200/_reindex' -H 'Content-Type: application/json' -d '{
+		  "source": { "index": "logstash-ha-2025.12.10" },
+		  "dest":   { "index": "logs-archived" }
+		}'
+	
+	** Reindex con filtro (solo log_level: ERROR):
+		curl -s -X POST 'http://10.10.1.4:9200/reindex' -H 'Content-Type: application/json' -d '{
+		  "source": {
+		    "index": "logstash-ha-2025.12.10",
+		    "query": { "term": { "loglevel.keyword": "ERROR" } }
+		  },
+		  "dest": { "index": "logs-errors" }
+		}'
+
+
+
+🔄 Rollover e ILM (gestión de vida del índice)
+	
+	** Definir alias + índice inicial para rollover:
+		curl -s -X PUT 'http://10.10.1.4:9200/logs-write' -H 'Content-Type: application/json' -d '{
+		  "aliases": { "logs-alias": { "iswriteindex": true } }
+		}'
+	
+	** Rollover por tamaño o número de docs:
+		curl -s -X POST 'http://10.10.1.4:9200/logs-alias/rollover' -H 'Content-Type: application/json' -d '{
+		  "conditions": {
+		    "maxsize": "1gb",
+		    "max_docs": 1000000
+		  }
+		}'
+	
+	** Adjuntar política ILM a un índice (ejemplo):
+		curl -s -X PUT 'http://10.10.1.4:9200/ilm/policy/logs-policy' -H 'Content-Type: application/json' -d '{
+		  "policy": {
+		    "phases": {
+		      "hot":   { "actions": { "rollover": { "maxsize": "1gb", "maxage": "7d" } } },
+		      "delete":{ "minage": "30d", "actions": { "delete": {} } }
+		    }
+		  }
+		}'
+	
+		curl -s -X PUT 'http://10.10.1.4:9200/logstash-ha-2025.12.10/settings' -H 'Content-Type: application/json' -d '{
+		  "index": {
+		    "lifecycle": {
+		      "name": "logs-policy",
+		      "rolloveralias": "logs-alias"
+		    }
+		  }
+		}'
+
+
+
+🧰 Mantenimiento (forcemerge, shrink, split)
+	
+	** Force merge (reduce segmentos; útil después de cargas masivas):
+		curl -s -X POST 'http://10.10.1.4:9200/logstash-ha-2025.12.10/forcemerge?maxnum_segments=1'
+	
+	
+	⚠️ Ejecutar con precaución; puede consumir IO y CPU.
+	
+	** Shrink (reducir shards; requiere índice cerrado y bloqueado):
+		
+		# preparar
+		curl -s -X PUT 'http://10.10.1.4:9200/demo-index/settings' -H 'Content-Type: application/json' -d '{"index.blocks.write": true}'
+		curl -s -X POST 'http://10.10.1.4:9200/demo-index/close'
+		
+		# shrink a 1 shard
+		curl -s -X POST 'http://10.10.1.4:9200/demo-index/shrink/demo-index-shrinked' -H 'Content-Type: application/json' -d '{"settings": {"index.numberofshards": 1 }}'
+		
+		# reabrir y limpiar bloqueos
+		curl -s -X POST 'http://10.10.1.4:9200/demo-index-shrinked/open'
+		curl -s -X PUT 'http://10.10.1.4:9200/demo-index-shrinked/_settings' -H 'Content-Type: application/json' -d '{"index.blocks.write": false}'
+	
+	
+	** Split (aumentar shards; requiere preparación):
+		
+		# preparar: establecer número de réplicas = 1, definir routing
+		curl -s -X PUT 'http://10.10.1.4:9200/demo-index/settings' -H 'Content-Type: application/json' -d '{
+		  "index": {
+		    "numberofreplicas": 1,
+		    "routing": { "allocation": { "include": { "name": "es-node-1" } } }
+		  }
+		}'
+		curl -s -X POST 'http://10.10.1.4:9200/demo-index/close'
+		curl -s -X POST 'http://10.10.1.4:9200/demo-index/split/demo-index-split' -H 'Content-Type: application/json' -d '{
+		  "settings": { "index.numberofshards": 4 }
+		}'
+		curl -s -X POST 'http://10.10.1.4:9200/demo-index-split/_open'
+	
+
+
+🗄️ Snapshots (backup/restore)
+	
+	** Listar repositorios de snapshot:
+		curl -s 'http://10.10.1.4:9200/_snapshot?pretty'
+	
+	** Crear repositorio (filesystem):
+		curl -s -X PUT 'http://10.10.1.4:9200/_snapshot/fs-repo' -H 'Content-Type: application/json' -d '{
+		  "type": "fs",
+		  "settings": { "location": "/mnt/es-backups", "compress": true }
+		}'
+	
+	** Tomar snapshot de un índice:
+		curl -s -X PUT 'http://10.10.1.4:9200/snapshot/fs-repo/snap-2025-12-10' -H 'Content-Type: application/json' -d '{
+		  "indices": "logstash-ha-2025.12.10",
+		  "ignoreunavailable": true,
+		  "includeglobalstate": false
+		}'
+	
+	** Restaurar snapshot:
+		curl -s -X POST 'http://10.10.1.4:9200/snapshot/fs-repo/snap-2025-12-10/restore' -H 'Content-Type: application/json' -d '{
+		  "indices": "logstash-ha-2025.12.10",
+		  "renamepattern": "logstash-ha-(.*)",
+		  "renamereplacement": "logstash-ha-restore-$1"
+		}'
+	
+
+
+🧾 Bonus: usar Kibana Dev Tools (si tienes Kibana)
+
+	En Kibana → Dev Tools → Console, puedes ejecutar los mismos comandos sin curl. Por ejemplo:
+	
+		GET cat/indices?v&s=store.size:desc
+		GET logstash-ha-2025.12.10/search?q=ERROR&size=10
+		POST _reindex
+		{
+		  "source": { "index": "logstash-ha-2025.12.10" },
+		  "dest":   { "index": "logs-archived" }
+		}
