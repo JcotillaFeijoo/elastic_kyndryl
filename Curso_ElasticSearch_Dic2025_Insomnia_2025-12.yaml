@@ -1,0 +1,431 @@
+type: collection.insomnia.rest/5.0
+name: Curso_ElasticSearch_Dic2025
+meta:
+  id: wrk_608f19f9a949430688cf192ade100014
+  created: 1765399189988
+  modified: 1765438831955
+collection:
+  - url: http://172.203.53.148:9200/products-advanced/_bulk
+    name: Lab2 - 2 (Body modificado)
+    meta:
+      id: req_1168b865d96441119ad89be4e6447336
+      created: 1765399192970
+      modified: 1765402779641
+      isPrivate: false
+      sortKey: -1765399192970
+    method: POST
+    body:
+      mimeType: application/json
+      text: >
+        { "index": { "_id": 1 } }
+
+        { "name": "Portátil profesional 15 pulgadas", "description": "Portátil ligero para trabajo remoto y desarrollo", "category": "laptop", "tags": ["oficina","desarrollo","remoto"], "price": 1200.0, "available_from": "2024-01-10T10:00:00Z", "attributes": [ { "key": "cpu", "value": "i7" }, { "key": "ram", "value": "16GB" }, { "key": "storage", "value": "512GB SSD" } ],  "variants": [ { "color": "gris", "size": "15", "stock": 5 }, { "color": "negro", "size": "15", "stock": 2 }  ]}
+
+        { "index": { "_id": 2 } }
+
+        { "name": "Portátil gaming 17 pulgadas", "description": "Equipo para juegos intensivos y streaming", "category": "laptop", "tags": ["gaming","streaming"], "price": 2000.0, "available_from": "2024-02-05T12:00:00Z",  "attributes": [    { "key": "cpu", "value": "i9" },    { "key": "ram", "value": "32GB" },    { "key": "gpu", "value": "RTX 4080" }  ],  "variants": [    { "color": "negro", "size": "17", "stock": 3 }  ]}
+
+        { "index": { "_id": 3 } }
+
+        { "name": "Monitor ultra ancho 34 pulgadas", "description": "Monitor curvo ideal para multitarea y observabilidad de dashboards", "category": "monitor", "tags": ["observabilidad","dashboard","oficina"], "price": 800.0, "available_from": "2023-11-20T09:00:00Z",  "attributes": [    { "key": "resolution", "value": "3440x1440" },    { "key": "panel", "value": "IPS" }  ],  "variants": [    { "color": "negro", "size": "34", "stock": 10 }  ]}
+
+        { "index": { "_id": 4 } }
+
+        { "name": "Teclado mecánico silencioso", "description": "Teclado mecánico silencioso para trabajo en oficina y turnos nocturnos", "category": "keyboard", "tags": ["oficina","silencioso"], "price": 150.0, "available_from": "2023-12-01T08:30:00Z",  "attributes": [    { "key": "switch", "value": "silent-red" },    { "key": "layout", "value": "ES" }  ],  "variants": [    { "color": "negro", "size": "full", "stock": 20 }  ]}
+    headers:
+      - name: Content-Type
+        value: application/json
+        id: pair_e2833601f7b34b478c71371024cea39e
+        disabled: true
+      - name: User-Agent
+        value: insomnia/11.0.1
+        id: pair_402c555ab8cf41a88c6c13aecaf21ae3
+        disabled: true
+      - id: pair_fb5194ee68e342dfb323f4077879428c
+        name: Content-Type
+        value: application/x-ndjson
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://172.203.53.148:9200/products-advanced/_search
+    name: Lab2 - 3.1 FAIL
+    meta:
+      id: req_6d819835d7894523bf215328eb0db4dd
+      created: 1765401237392
+      modified: 1765402199385
+      isPrivate: false
+      sortKey: -1765161418563.5
+    method: GET
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "query": {
+            "fuzzy": {
+              "name": {
+                "value": "portatil profecional",
+                "fuzziness": "AUTO"
+              }
+            }
+          }
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        id: pair_e2833601f7b34b478c71371024cea39e
+        disabled: false
+      - name: User-Agent
+        value: insomnia/11.0.1
+        id: pair_402c555ab8cf41a88c6c13aecaf21ae3
+        disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://172.203.53.148:9200/products-advanced/_search
+    name: Lab2 - 3.2 OK
+    meta:
+      id: req_6367bbd5a349464cba82d69d3f3c8d23
+      created: 1765401618050
+      modified: 1765402224085
+      isPrivate: false
+      sortKey: -1765042531360.25
+    method: GET
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "query": {
+            "match_phrase": {
+              "description": {
+                "query": "juegos intensivos streaming",
+                "slop": 3
+              }
+            }
+          }
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        id: pair_e2833601f7b34b478c71371024cea39e
+        disabled: false
+      - name: User-Agent
+        value: insomnia/11.0.1
+        id: pair_402c555ab8cf41a88c6c13aecaf21ae3
+        disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://172.203.53.148:9200/products-advanced/_search
+    name: Lab2 - 3.3.1 OK
+    meta:
+      id: req_e1f1d44d1b754e068ae04f9d8d3da771
+      created: 1765401916924
+      modified: 1765402246213
+      isPrivate: false
+      sortKey: -1764983087758.625
+    method: GET
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "query": {
+            "regexp": {
+              "category": "lap.*"
+            }
+          }
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        id: pair_e2833601f7b34b478c71371024cea39e
+        disabled: false
+      - name: User-Agent
+        value: insomnia/11.0.1
+        id: pair_402c555ab8cf41a88c6c13aecaf21ae3
+        disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://172.203.53.148:9200/products-advanced/_search
+    name: Lab2 - 3.3.2 OK
+    meta:
+      id: req_9f038865f62a4917bb6d5fb779a1218d
+      created: 1765402045913
+      modified: 1765402257562
+      isPrivate: false
+      sortKey: -1764953365957.8125
+    method: GET
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "query": {
+            "regexp": {
+              "name.keyword": ".*Portátil.*"
+            }
+          }
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        id: pair_e2833601f7b34b478c71371024cea39e
+        disabled: false
+      - name: User-Agent
+        value: insomnia/11.0.1
+        id: pair_402c555ab8cf41a88c6c13aecaf21ae3
+        disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://172.203.53.148:9200/products-advanced/_search
+    name: Lab2 - 3.4 OK (no resultados)
+    meta:
+      id: req_21d031b4482e45ab9fe04de32c4c05e4
+      created: 1765402304531
+      modified: 1765402612134
+      isPrivate: false
+      sortKey: -1764938505057.4062
+    method: GET
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "query": {
+            "bool": {
+              "must": [
+                { "term": { "category": "laptop" } }
+              ],
+              "filter": [
+                {
+                  "range": {
+                    "price": {
+                      "gte": 1000,
+                      "lte": 2500
+                    }
+                  }
+                },
+                {
+                  "nested": {
+                    "path": "attributes",
+                    "query": {
+                      "bool": {
+                        "must": [
+                          { "term": { "attributes.key": "ram" } },
+                          { "term": { "attributes.value": "32GB" } }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "must_not": [
+                { "term": { "tags": "gaming" } }
+              ]
+            }
+          }
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        id: pair_e2833601f7b34b478c71371024cea39e
+        disabled: false
+      - name: User-Agent
+        value: insomnia/11.0.1
+        id: pair_402c555ab8cf41a88c6c13aecaf21ae3
+        disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://172.203.53.148:9200/products-advanced/_search
+    name: Lab2 - 3.4 OK (si resultados)
+    meta:
+      id: req_f5c8e94ee881462c8509c566ed9298c4
+      created: 1765402624832
+      modified: 1765402635430
+      isPrivate: false
+      sortKey: -1764931074607.2031
+    method: GET
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "query": {
+            "bool": {
+              "must": [
+                { "term": { "category": "laptop" } }
+              ],
+              "filter": [
+                {
+                  "range": {
+                    "price": {
+                      "gte": 1000,
+                      "lte": 2500
+                    }
+                  }
+                },
+                {
+                  "nested": {
+                    "path": "attributes",
+                    "query": {
+                      "bool": {
+                        "must": [
+                          { "term": { "attributes.key": "ram" } },
+                          { "term": { "attributes.value": "16GB" } }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "must_not": [
+                { "term": { "tags": "gaming" } }
+              ]
+            }
+          }
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        id: pair_e2833601f7b34b478c71371024cea39e
+        disabled: false
+      - name: User-Agent
+        value: insomnia/11.0.1
+        id: pair_402c555ab8cf41a88c6c13aecaf21ae3
+        disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://172.203.53.148:9200/products-advanced/_search
+    name: Lab2 - 4.1 OK
+    meta:
+      id: req_0144f2aea2074e109058af96d137124d
+      created: 1765402702040
+      modified: 1765402956816
+      isPrivate: false
+      sortKey: -1764927359382.1016
+    method: GET
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "size": 0,
+          "aggs": {
+            "productos_por_mes": {
+              "date_histogram": {
+                "field": "available_from",
+                "calendar_interval": "month",
+                "format": "yyyy-MM"
+              }
+            }
+          }
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        id: pair_e2833601f7b34b478c71371024cea39e
+        disabled: false
+      - name: User-Agent
+        value: insomnia/11.0.1
+        id: pair_402c555ab8cf41a88c6c13aecaf21ae3
+        disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://172.203.53.148:9200/products-advanced/_search
+    name: Lab2 - 4.2 OK
+    meta:
+      id: req_9901376ec2bc415d8b7f424b0dab3604
+      created: 1765402950202
+      modified: 1765403037523
+      isPrivate: false
+      sortKey: -1764925501769.5508
+    method: GET
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "size": 0,
+          "aggs": {
+            "categorias_unicas": {
+              "cardinality": {
+                "field": "category"
+              }
+            },
+            "tags_unicos": {
+              "cardinality": {
+                "field": "tags"
+              }
+            }
+          }
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        id: pair_e2833601f7b34b478c71371024cea39e
+        disabled: false
+      - name: User-Agent
+        value: insomnia/11.0.1
+        id: pair_402c555ab8cf41a88c6c13aecaf21ae3
+        disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_747a34d76338ca5a738808365def4071a030d1ce
+    created: 1765399190006
+    modified: 1765399190006
+environments:
+  name: Base Environment
+  meta:
+    id: env_747a34d76338ca5a738808365def4071a030d1ce
+    created: 1765399189996
+    modified: 1765399189996
+    isPrivate: false
